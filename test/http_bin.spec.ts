@@ -1,5 +1,5 @@
-import pactum from 'pactum';
 import { StatusCodes } from 'http-status-codes';
+import pactum from 'pactum';
 import { SimpleReporter } from '../simple-reporter';
 
 describe('Echo validation', () => {
@@ -12,7 +12,7 @@ describe('Echo validation', () => {
   beforeAll(() => p.reporter.add(rep));
   afterAll(() => p.reporter.end());
 
-  describe('Verifying endpoints using POST method', () => {
+  describe('Verifying endpoints using POST method RENAN', () => {
     it('Should return the same data as the json sent', async () => {
       await p
         .spec()
