@@ -12,7 +12,7 @@ describe('Echo validation', () => {
   beforeAll(() => p.reporter.add(rep));
   afterAll(() => p.reporter.end());
 
-  describe('Verifying endpoints using POST method RENAN', () => {
+  describe('Verifying endpoints using POST method', () => {
     it('Should return the same data as the json sent', async () => {
       await p
         .spec()
