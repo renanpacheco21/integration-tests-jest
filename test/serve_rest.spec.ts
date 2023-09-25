@@ -8,10 +8,12 @@ describe('ServeRest API', () => {
   let idUsuario = '';
   let idProduto = '';
   let emailUsuario = '';
-  const timeout = 60000;
+  //const timeout = 60000;
   const p = pactum;
   const rep = SimpleReporter;
   const baseUrl = 'https://serverest.dev';
+
+  p.request.setDefaultTimeout(60000);
 
   beforeAll(async () => {
     p.reporter.add(rep);
@@ -19,7 +21,6 @@ describe('ServeRest API', () => {
     idUsuario = await p
       .spec()
       .post(`${baseUrl}/usuarios`)
-      .withRequestTimeout(timeout)
       .withHeaders('monitor', false)
       .withJson({
         nome: faker.internet.userName(),
@@ -33,7 +34,6 @@ describe('ServeRest API', () => {
     emailUsuario = await p
       .spec()
       .get(`${baseUrl}/usuarios/${idUsuario}`)
-      .withRequestTimeout(timeout)
       .withHeaders('monitor', false)
       .expectStatus(StatusCodes.OK)
       .returns('email');
@@ -43,7 +43,6 @@ describe('ServeRest API', () => {
     token = await p
       .spec()
       .post(`${baseUrl}/login`)
-      .withRequestTimeout(timeout)
       .withHeaders('monitor', false)
       .withJson({
         email: `${emailUsuario}`,
@@ -57,12 +56,26 @@ describe('ServeRest API', () => {
       .returns('authorization');
   });
 
+  describe('Validações Login', () => {
+    it('Login inválido', async () => {
+      await p
+        .spec()
+        .post(`${baseUrl}/login`)
+        .withHeaders('monitor', false)
+        .withJson({
+          email: faker.internet.email(),
+          password: faker.random.numeric(5)
+        })
+        .expectStatus(StatusCodes.UNAUTHORIZED)
+        .expectBodyContains('Email e/ou senha inválidos');
+    });
+  });
+
   describe('Produtos', () => {
     it('Cadastro um novo produto', async () => {
       idProduto = await p
         .spec()
         .post(`${baseUrl}/produtos`)
-        .withRequestTimeout(timeout)
         .withHeaders('Authorization', token)
         .withHeaders('monitor', false)
         .withJson({
@@ -91,10 +104,25 @@ describe('ServeRest API', () => {
       await p
         .spec()
         .get(`${baseUrl}/produtos/${idProduto}`)
-        .withRequestTimeout(timeout)
         .withHeaders('Authorization', token)
         .withHeaders('monitor', false)
         .expectStatus(StatusCodes.OK);
+    });
+    it('Produto sem token válido', async () => {
+      await p
+        .spec()
+        .post(`${baseUrl}/produtos`)
+        .withHeaders('monitor', false)
+        .withJson({
+          nome: faker.commerce.productName(),
+          preco: 500,
+          descricao: faker.commerce.productDescription(),
+          quantidade: 10
+        })
+        .expectStatus(StatusCodes.UNAUTHORIZED)
+        .expectBodyContains(
+          'Token de acesso ausente, inválido, expirado ou usuário do token não existe mais'
+        );
     });
   });
 
@@ -103,7 +131,6 @@ describe('ServeRest API', () => {
       await p
         .spec()
         .post(`${baseUrl}/carrinhos`)
-        .withRequestTimeout(timeout)
         .withHeaders('Authorization', token)
         .withHeaders('monitor', false)
         .withJson({
@@ -115,14 +142,21 @@ describe('ServeRest API', () => {
           ]
         })
         .expectStatus(StatusCodes.CREATED)
-        .expectBodyContains('Cadastro realizado com sucesso')
-        .returns('_id');
+        .expectBodyContains('Cadastro realizado com sucesso');
+    });
+    it('Carrinho inválido', async () => {
+      await p
+        .spec()
+        .get(`${baseUrl}/carrinhos/qbMqntef4iTO1wWgg`)
+        .withHeaders('Authorization', token)
+        .withHeaders('monitor', false)
+        .expectStatus(StatusCodes.BAD_REQUEST)
+        .expectBodyContains('Carrinho não encontrado');
     });
     it('Conclui a compra e exclui o carrinho', async () => {
       await p
         .spec()
         .delete(`${baseUrl}/carrinhos/concluir-compra`)
-        .withRequestTimeout(timeout)
         .withHeaders('Authorization', token)
         .withHeaders('monitor', false)
         .expectStatus(StatusCodes.OK)
