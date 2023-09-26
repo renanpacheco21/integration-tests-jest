@@ -8,6 +8,7 @@ describe('Echo validation', () => {
   const baseUrl = 'https://httpbin.org';
 
   p.request.setDefaultTimeout(30000);
+  
 
   beforeAll(() => p.reporter.add(rep));
   afterAll(() => p.reporter.end());
